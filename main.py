@@ -28,9 +28,9 @@ class BrochureParser:
                 valid_from = (
                     datetime.strptime(match.group(), "%d.%m.%Y").strftime("%Y-%m-%d")
                     if match
-                    else "Unknown"
+                    else None
                 )
-                valid_to = "Unknown"
+                valid_to = None
             # Standard case: "day.month.year - day.month.year"
             else:
                 date_parts = [d.strip() for d in date_text.split("-")]
@@ -40,7 +40,7 @@ class BrochureParser:
                 ]
         except Exception as e:
             print(f"Error parsing date range: {e}")
-            valid_from, valid_to = "Unknown", "Unknown"
+            valid_from, valid_to = None, None
 
         return valid_from, valid_to
 
@@ -52,18 +52,18 @@ class BrochureParser:
             title = (
                 item.select_one(".grid-item-content strong").get_text(strip=True)
                 if item.select_one(".grid-item-content strong")
-                else "Unknown"
+                else None
             )
             picture_tag = item.select_one(".grid-logo picture img")
             thumbnail = (
                 picture_tag.get("data-src", picture_tag.get("src", "")).strip()
                 if picture_tag
-                else ""
+                else None
             )
             shop_name = (
                 picture_tag.get("alt", "").replace("Logo", "").strip()
                 if picture_tag
-                else "Unknown"
+                else None
             )
             date_range_text = (
                 item.select_one(".grid-item-content small.hidden-sm").get_text(
@@ -77,11 +77,11 @@ class BrochureParser:
 
             self.brochures.append(
                 {
-                    "title": title,
-                    "thumbnail": thumbnail,
-                    "shop_name": shop_name,
-                    "valid_from": valid_from,
-                    "valid_to": valid_to,
+                    "title": title or "Unknown",
+                    "thumbnail": thumbnail or "Unknown",
+                    "shop_name": shop_name or "Unknown",
+                    "valid_from": valid_from or "Unknown",
+                    "valid_to": valid_to or "Unknown",
                     "parsed_time": parsed_time,
                 }
             )
@@ -90,7 +90,7 @@ class BrochureParser:
         issues = []
         for brochure in self.brochures:
             for key, value in brochure.items():
-                if value == "Unknown" or value == "" or value == []:
+                if value in [None, "", "Unknown"]:
                     issues.append(
                         f"Shop '{brochure['shop_name']}': '{key}' is incomplete or missing."
                     )
